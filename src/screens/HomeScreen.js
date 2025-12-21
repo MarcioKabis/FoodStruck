@@ -13,19 +13,41 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.menu}>
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Cardapio")}>
-          <Text style={styles.cardTitle}>🍔 Produtos</Text>
-          <Text style={styles.cardDesc}>Cadastro e edição do cardápio</Text>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Cardapio")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cardTitle}>🍔 Cardapio</Text>
+          <Text style={styles.cardDesc}>Vizualização</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Estoque")}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Estoque")}
+          activeOpacity={0.7}
+        >
           <Text style={styles.cardTitle}>📦 Estoque</Text>
-          <Text style={styles.cardDesc}>Controle de quantidades</Text>
+          <Text style={styles.cardDesc}>Vizualização</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Caixa")}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Caixa")}
+          activeOpacity={0.7}
+        >
           <Text style={styles.cardTitle}>💰 Caixa</Text>
-          <Text style={styles.cardDesc}>Abertura, vendas e fechamento</Text>
+          <Text style={styles.cardDesc}>Abertura e fechamento</Text>
+        </TouchableOpacity>
+
+        {/* CARD ADMINISTRADOR */}
+        <TouchableOpacity
+          style={styles.cardAdmin}
+          onPress={() => navigation.navigate("LoginAdmin")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cardTitle}>🔑 Administrador</Text>
+          <Text style={styles.cardDesc}>Acesso à área restrita</Text>
         </TouchableOpacity>
       </View>
 
@@ -38,17 +60,39 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB", padding: 16 },
-  header: { marginBottom: 24 },
+  header: { marginBottom: 24, alignItems: "center" },
   title: { fontSize: 28, fontWeight: "bold", color: "#111827" },
   subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
-  menu: { flex: 1, gap: 16 },
+  menu: { flex: 1 },
   card: {
     backgroundColor: "#FFF",
     padding: 20,
     borderRadius: 12,
+    marginBottom: 16,
     ...Platform.select({
       android: { elevation: 3 },
-      ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4 },
+      ios: { 
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      web: { boxShadow: "0px 4px 6px rgba(0,0,0,0.1)" },
+    }),
+  },
+  cardAdmin: {
+    backgroundColor: "#FFE4E1", // cor diferenciada para o admin
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    ...Platform.select({
+      android: { elevation: 3 },
+      ios: { 
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
       web: { boxShadow: "0px 4px 6px rgba(0,0,0,0.1)" },
     }),
   },

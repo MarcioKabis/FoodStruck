@@ -15,6 +15,10 @@ import HomeScreen from "./src/screens/HomeScreen";
 import CardapioScreen from "./src/screens/CardapioScreen";
 import EstoqueScreen from "./src/screens/EstoqueScreen";
 import CaixaScreen from "./src/screens/CaixaScreen";
+import LoginAdminScreen from "./src/screens/LoginAdminScreen";
+import HomeAdminScreen from "./src/screens/HomeAdminScreen";
+import CardapioAdminScreen from "./src/screens/CardapioAdminScreen";
+import EstoqueAdminScreen from "./src/screens/EstoqueAdminScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -72,6 +76,33 @@ export default function App() {
             component={CaixaScreen}
             options={{ title: "Caixa" }}
           />
+
+          <Stack.Screen
+            name="LoginAdmin"
+            component={LoginAdminScreen}
+            options={{ title: "LoginAdmin" }}
+          />
+
+           <Stack.Screen
+            name="HomeAdmin"
+            component={HomeAdminScreen}
+            options={{ title: "HomeAdmin" }}
+          />
+
+           <Stack.Screen
+            name="CardapioAdmin"
+            component={CardapioAdminScreen}
+            options={{ title: "CardapioAdmin" }}
+          />
+
+          
+           <Stack.Screen
+            name="EstoqueAdmin"
+            component={EstoqueAdminScreen}
+            options={{ title: "EstoqueAdmin" }}
+          />
+
+
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
