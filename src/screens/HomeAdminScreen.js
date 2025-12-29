@@ -45,9 +45,9 @@ export default function HomeAdminScreen() {
           <Text style={styles.cardDesc}>Cadastrar,editar e excluir</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Caixa")} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("CaixaAdmin")} activeOpacity={0.7}>
           <Text style={styles.cardTitle}>💰 Caixa</Text>
-          <Text style={styles.cardDesc}>Cadastrar usuários e movimentações</Text>
+          <Text style={styles.cardDesc}>Usuários e movimentações</Text>
         </TouchableOpacity>
       </View>
 
