@@ -1,17 +1,29 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function CaixaAdminScreen() {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       
-      <TouchableOpacity style={styles.button}>
+      {/* BOTÃO USUÁRIOS */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("Usuarios")}
+      >
         <Text style={styles.buttonText}>Usuários</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
+      {/* BOTÃO MOVIMENTAÇÕES */}
+      <TouchableOpacity
+        style={[styles.button, styles.secondaryButton]}
+        onPress={() => navigation.navigate("Movimentacoes")}
+      >
         <Text style={styles.buttonText}>Movimentações</Text>
       </TouchableOpacity>
+
     </View>
   );
 }
@@ -44,7 +56,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 3, // Android
+    elevation: 3,
   },
   secondaryButton: {
     backgroundColor: "#16A34A",
