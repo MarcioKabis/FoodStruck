@@ -118,7 +118,7 @@ export default function MovimentacaoScreen() {
           <Text>Total Geral: R${resultado.totalGeral.toFixed(2)}</Text>
           <Text>Total em Dinheiro: R${resultado.totalDinheiro.toFixed(2)}</Text>
           <Text>Total em Cartão de Débito: R${resultado.totalCartaoDebito.toFixed(2)}</Text>
-          <Text>Total em Cartão  de Crédito: R${resultado.totalCartaoCredito.toFixed(2)}</Text>
+          <Text>Total em Cartão de Crédito: R${resultado.totalCartaoCredito.toFixed(2)}</Text>
         </View>
       )}
     </ScrollView>

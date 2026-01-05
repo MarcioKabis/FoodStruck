@@ -62,9 +62,6 @@ export default function CaixaScreen() {
     carregarDados();
   }, [caixaId]);
 
-  /* =========================
-     ADICIONAR PRODUTO AO PEDIDO
-  ========================= */
   const adicionarProduto = (produto) => {
     setItensPedido((prev) => {
       const existente = prev.find((p) => p.id === produto.id);
@@ -98,9 +95,6 @@ export default function CaixaScreen() {
     });
   };
 
-  /* =========================
-     FINALIZAR PEDIDO
-  ========================= */
   const finalizarPedido = async () => {
     if (itensPedido.length === 0) {
       Alert.alert("Aviso", "Nenhum produto no pedido");
@@ -159,16 +153,18 @@ export default function CaixaScreen() {
 
       {/* ===== CARDÁPIO ===== */}
       <Text style={styles.subTitle}>Cardápio</Text>
-      {produtos.map((produto) => (
-        <TouchableOpacity
-          key={produto.id}
-          style={styles.card}
-          onPress={() => adicionarProduto(produto)}
-        >
-          <Text style={styles.cardTitulo}>{produto.nome}</Text>
-          <Text style={styles.cardDescricao}>{produto.descricao}</Text>
-        </TouchableOpacity>
-      ))}
+      <View style={styles.cardsContainer}>
+        {produtos.map((produto) => (
+          <TouchableOpacity
+            key={produto.id}
+            style={styles.card}
+            onPress={() => adicionarProduto(produto)}
+          >
+            <Text style={styles.cardTitulo}>{produto.nome}</Text>
+            <Text style={styles.cardDescricao}>{produto.descricao}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* ===== RESUMO PEDIDO ===== */}
       <Text style={styles.subTitle}>Pedido</Text>
@@ -177,9 +173,25 @@ export default function CaixaScreen() {
       ) : (
         <>
           {itensPedido.map((item) => (
-            <Text key={item.id}>
-              {item.nome} x{item.quantidade} — R${(item.preco * item.quantidade).toFixed(2)}
-            </Text>
+            <View key={item.id} style={styles.pedidoItem}>
+              <Text style={{ flex: 1 }}>
+                {item.nome} x{item.quantidade} — R${(item.preco * item.quantidade).toFixed(2)}
+              </Text>
+              <TouchableOpacity
+                style={styles.excluirBotao}
+                onPress={() => {
+                  const novoPedido = itensPedido.filter((p) => p.id !== item.id);
+                  setItensPedido(novoPedido);
+                  const novoTotal = novoPedido.reduce(
+                    (sum, i) => sum + i.preco * i.quantidade,
+                    0
+                  );
+                  setTotalPedido(novoTotal);
+                }}
+              >
+                <Text style={{ color: "#fff", fontWeight: "bold" }}>X</Text>
+              </TouchableOpacity>
+            </View>
           ))}
           <Text style={styles.total}>Total: R${totalPedido.toFixed(2)}</Text>
         </>
@@ -229,6 +241,7 @@ export default function CaixaScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
@@ -245,19 +258,44 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginVertical: 12,
   },
+  cardsContainer: {
+    width: "50%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
   card: {
-    padding: 12,
+    width: "30%",
+    minWidth: 100,
+    maxWidth: 150,
+    padding: 16,
     borderWidth: 1,
     borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: "#d4e0ecff",
+    margin: 8,
+    alignItems: "center",
   },
   cardTitulo: {
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "center",
   },
   cardDescricao: {
     fontSize: 14,
     color: "#555",
+    textAlign: "center",
+  },
+  pedidoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+    width: "80%",
+  },
+  excluirBotao: {
+    backgroundColor: "#FF3B30",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   total: {
     marginTop: 8,
@@ -268,12 +306,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     marginVertical: 8,
+    width: "100%",
   },
   pagamentoBotao: {
     padding: 10,
     borderWidth: 1,
     borderRadius: 8,
     borderColor: "#007AFF",
+    backgroundColor: "#d4e0ecff",
   },
   pagamentoSelecionado: {
     backgroundColor: "#007AFF",

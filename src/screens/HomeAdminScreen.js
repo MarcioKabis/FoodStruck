@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   footer: { alignItems: "center", paddingVertical: 16 },
   footerText: { fontSize: 12, color: "#9CA3AF", marginTop: 8 },
   logoutButton: {
-    backgroundColor: "#DC2626",
+    backgroundColor: "#2563EB",
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
