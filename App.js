@@ -22,6 +22,7 @@ import EstoqueAdminScreen from "./src/screens/EstoqueAdminScreen";
 import CaixaAdminScreen from "./src/screens/CaixaAdminScreen";
 import UsuariosScreen from "./src/screens/UsuariosScreen";
 import AberturaCaixaScreen from "./src/screens/AberturaCaixaScreen";
+import MovimentacaoScreen from "./src/screens/MovimentacaoScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -124,6 +125,11 @@ export default function App() {
             options={{ title: "Abertura de caixa" }}
           />
          
+           <Stack.Screen
+            name="Movimentacoes"
+            component={MovimentacaoScreen}
+            options={{ title: "Movimentacao financeira" }}
+          />
 
         </Stack.Navigator>
       </NavigationContainer>
