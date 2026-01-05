@@ -1,99 +1,281 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform } from "react-native";
-import Loading from "../components/Loading";
-import { movimentacoesCaixaCollection, onSnapshot, addDoc, serverTimestamp } from "../services/firebase";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+
+import { useNavigation, useRoute } from "@react-navigation/native";
+
+import CaixaService from "../services/CaixaService";
+import { listarProdutos } from "../services/ProdutosService";
+import { criarPedido } from "../services/PedidosService";
 
 export default function CaixaScreen() {
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  const { caixaId } = route.params || {};
+
+  const [caixa, setCaixa] = useState(null);
+  const [produtos, setProdutos] = useState([]);
+  const [itensPedido, setItensPedido] = useState([]);
+  const [totalPedido, setTotalPedido] = useState(0);
+  const [formaPagamento, setFormaPagamento] = useState("dinheiro");
+
   const [loading, setLoading] = useState(true);
-  const [saldo, setSaldo] = useState(0);
-  const [movimentacoes, setMovimentacoes] = useState([]);
+  const [salvandoPedido, setSalvandoPedido] = useState(false);
+  const [fechando, setFechando] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(movimentacoesCaixaCollection, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMovimentacoes(items);
-      const total = items.reduce((acc, mov) => (mov.tipo === "entrada" ? acc + Number(mov.valor) : acc - Number(mov.valor)), 0);
-      setSaldo(total);
-      setLoading(false);
-    }, (error) => {
-      console.error(error);
-      setLoading(false);
-    });
+    if (!caixaId) {
+      navigation.replace("Home");
+      return;
+    }
 
-    return unsubscribe;
-  }, []);
+    const carregarDados = async () => {
+      try {
+        const caixaAtual = await CaixaService.caixaAberto();
+        if (!caixaAtual || caixaAtual.id !== caixaId) {
+          Alert.alert("Aviso", "Caixa não encontrado ou fechado");
+          navigation.replace("Home");
+          return;
+        }
 
-  if (loading) return <Loading text="Carregando Caixa..." />;
+        const listaProdutos = await listarProdutos();
 
-  const adicionarMovimentacao = async (tipo) => {
-    Alert.prompt(
-      tipo === "entrada" ? "Adicionar Entrada" : "Adicionar Saída",
-      "Informe o valor:",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Adicionar",
-          onPress: async (valor) => {
-            const numericValor = Number(valor);
-            if (isNaN(numericValor) || numericValor <= 0) {
-              Alert.alert("Valor inválido!");
-              return;
-            }
-            try { await addDoc(movimentacoesCaixaCollection, { tipo, valor: numericValor, createdAt: serverTimestamp() }); }
-            catch (error) { console.error(error); }
+        setCaixa(caixaAtual);
+        setProdutos(listaProdutos);
+      } catch (error) {
+        Alert.alert("Erro", "Erro ao carregar dados");
+        navigation.replace("Home");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarDados();
+  }, [caixaId]);
+
+  /* =========================
+     ADICIONAR PRODUTO AO PEDIDO
+  ========================= */
+  const adicionarProduto = (produto) => {
+    setItensPedido((prev) => {
+      const existente = prev.find((p) => p.id === produto.id);
+
+      let novoPedido;
+      if (existente) {
+        novoPedido = prev.map((p) =>
+          p.id === produto.id
+            ? { ...p, quantidade: p.quantidade + 1 }
+            : p
+        );
+      } else {
+        novoPedido = [
+          ...prev,
+          {
+            id: produto.id,
+            nome: produto.nome,
+            preco: produto.preco,
+            quantidade: 1,
           },
-        },
-      ],
-      "plain-text"
-    );
+        ];
+      }
+
+      const novoTotal = novoPedido.reduce(
+        (sum, item) => sum + item.preco * item.quantidade,
+        0
+      );
+      setTotalPedido(novoTotal);
+
+      return novoPedido;
+    });
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text style={styles.itemText}>{item.tipo === "entrada" ? "💵 Entrada" : "💸 Saída"} - R$ {item.valor}</Text>
-    </View>
-  );
+  /* =========================
+     FINALIZAR PEDIDO
+  ========================= */
+  const finalizarPedido = async () => {
+    if (itensPedido.length === 0) {
+      Alert.alert("Aviso", "Nenhum produto no pedido");
+      return;
+    }
+
+    try {
+      setSalvandoPedido(true);
+
+      await criarPedido({
+        usuarioId: caixa.usuario?.id,
+        caixaId: caixa.id,
+        total: totalPedido,
+        itens: itensPedido,
+        formaPagamento,
+      });
+
+      Alert.alert("Sucesso", "Pedido registrado");
+      setItensPedido([]);
+      setTotalPedido(0);
+    } catch (error) {
+      Alert.alert("Erro", error.message || "Erro ao salvar pedido");
+    } finally {
+      setSalvandoPedido(false);
+    }
+  };
+
+  const fecharCaixa = async () => {
+    try {
+      setFechando(true);
+      await CaixaService.fecharCaixa(caixa.id, caixa.total || 0);
+      Alert.alert("Sucesso", "Caixa fechado");
+      navigation.replace("Home");
+    } catch {
+      Alert.alert("Erro", "Erro ao fechar caixa");
+    } finally {
+      setFechando(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Caixa</Text>
-      <Text style={styles.saldo}>Saldo atual: R$ {saldo.toFixed(2)}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Caixa Aberto</Text>
 
-      <View style={styles.buttons}>
-        <TouchableOpacity style={[styles.button, { backgroundColor: "#16A34A" }]} onPress={() => adicionarMovimentacao("entrada")}>
-          <Text style={styles.buttonText}>Adicionar Entrada</Text>
-        </TouchableOpacity>
+      <Text style={styles.usuario}>
+        Usuário: {caixa.usuario?.nome || "Não informado"}
+      </Text>
 
-        <TouchableOpacity style={[styles.button, { backgroundColor: "#DC2626" }]} onPress={() => adicionarMovimentacao("saida")}>
-          <Text style={styles.buttonText}>Adicionar Saída</Text>
+      {/* ===== CARDÁPIO ===== */}
+      <Text style={styles.subTitle}>Cardápio</Text>
+      {produtos.map((produto) => (
+        <TouchableOpacity
+          key={produto.id}
+          style={styles.card}
+          onPress={() => adicionarProduto(produto)}
+        >
+          <Text style={styles.cardTitulo}>{produto.nome}</Text>
+          <Text style={styles.cardDescricao}>{produto.descricao}</Text>
         </TouchableOpacity>
+      ))}
+
+      {/* ===== RESUMO PEDIDO ===== */}
+      <Text style={styles.subTitle}>Pedido</Text>
+      {itensPedido.length === 0 ? (
+        <Text>Nenhum item selecionado</Text>
+      ) : (
+        <>
+          {itensPedido.map((item) => (
+            <Text key={item.id}>
+              {item.nome} x{item.quantidade} — R${(item.preco * item.quantidade).toFixed(2)}
+            </Text>
+          ))}
+          <Text style={styles.total}>Total: R${totalPedido.toFixed(2)}</Text>
+        </>
+      )}
+
+      {/* ===== FORMA DE PAGAMENTO ===== */}
+      <Text style={styles.subTitle}>Forma de Pagamento</Text>
+      <View style={styles.pagamentoContainer}>
+        {["dinheiro", "cartão de débito", "cartão de crédito"].map((forma) => (
+          <TouchableOpacity
+            key={forma}
+            style={[
+              styles.pagamentoBotao,
+              formaPagamento === forma && styles.pagamentoSelecionado,
+            ]}
+            onPress={() => setFormaPagamento(forma)}
+          >
+            <Text
+              style={{
+                color: formaPagamento === forma ? "#fff" : "#000",
+                fontWeight: "bold",
+              }}
+            >
+              {forma}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      <FlatList
-        data={movimentacoes}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingVertical: 16 }}
-        ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma movimentação registrada.</Text>}
+      <Button
+        title={salvandoPedido ? "Salvando..." : "Finalizar Pedido"}
+        onPress={finalizarPedido}
+        disabled={salvandoPedido}
       />
-    </View>
+
+      <View style={{ marginTop: 16 }}>
+        <Button
+          title={fechando ? "Fechando..." : "Fechar Caixa"}
+          onPress={fecharCaixa}
+          disabled={fechando}
+        />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#F9FAFB" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 8, color: "#111827" },
-  saldo: { fontSize: 18, marginBottom: 16, color: "#111827" },
-  buttons: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
-  button: { flex: 1, padding: 12, borderRadius: 8, alignItems: "center", marginHorizontal: 4 },
-  buttonText: { color: "#FFF", fontWeight: "600" },
-  item: {
-    backgroundColor: "#FFF",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 12,
-    ...Platform.select({ android: { elevation: 2 }, ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4 }, web: { boxShadow: "0px 4px 6px rgba(0,0,0,0.1)" } }),
+  container: {
+    padding: 16,
   },
-  itemText: { fontSize: 16, color: "#111827" },
-  emptyText: { fontSize: 16, color: "#6B7280", textAlign: "center", marginTop: 32 },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  usuario: {
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginVertical: 12,
+  },
+  card: {
+    padding: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  cardTitulo: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  cardDescricao: {
+    fontSize: 14,
+    color: "#555",
+  },
+  total: {
+    marginTop: 8,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  pagamentoContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginVertical: 8,
+  },
+  pagamentoBotao: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: "#007AFF",
+  },
+  pagamentoSelecionado: {
+    backgroundColor: "#007AFF",
+  },
 });

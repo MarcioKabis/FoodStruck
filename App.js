@@ -21,6 +21,8 @@ import CardapioAdminScreen from "./src/screens/CardapioAdminScreen";
 import EstoqueAdminScreen from "./src/screens/EstoqueAdminScreen";
 import CaixaAdminScreen from "./src/screens/CaixaAdminScreen";
 import UsuariosScreen from "./src/screens/UsuariosScreen";
+import AberturaCaixaScreen from "./src/screens/AberturaCaixaScreen";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -115,6 +117,13 @@ export default function App() {
             component={UsuariosScreen}
             options={{ title: "Usuario" }}
           />
+           
+             <Stack.Screen
+            name="AberturaCaixa"
+            component={AberturaCaixaScreen}
+            options={{ title: "Abertura de caixa" }}
+          />
+         
 
         </Stack.Navigator>
       </NavigationContainer>

@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
   Platform,
   Alert,
 } from "react-native";
@@ -92,13 +91,20 @@ export default function CardapioAdminScreen() {
 
   const salvarProduto = async () => {
     const { nome, descricao, categoria, preco } = novoProduto;
-    if (!nome || !descricao || !categoria || !preco || isNaN(preco)) {
-      alert("Preencha todos os campos corretamente.");
+    if (!nome || !categoria || !preco || isNaN(preco)) {
+      alert(
+        "Preencha todos os campos obrigatórios corretamente (nome, categoria e preço)."
+      );
       return;
     }
 
     try {
-      await criarProduto({ nome, descricao, categoria, preco: parseFloat(preco) });
+      await criarProduto({
+        nome,
+        descricao: descricao || "", // descrição agora é opcional
+        categoria,
+        preco: parseFloat(preco),
+      });
       setModalAdicionar(false);
       setNovoProduto({ nome: "", descricao: "", categoria: "", preco: "" });
       carregarProdutos();
@@ -129,7 +135,11 @@ export default function CardapioAdminScreen() {
               <View key={produto.id} style={styles.produtoCard}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.produtoNome}>{produto.nome}</Text>
-                  <Text style={styles.produtoDescricao}>{produto.descricao}</Text>
+                  {produto.descricao ? (
+                    <Text style={styles.produtoDescricao}>
+                      {produto.descricao}
+                    </Text>
+                  ) : null}
                   <Text style={styles.produtoPreco}>
                     R$ {produto.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Text>
@@ -195,25 +205,33 @@ export default function CardapioAdminScreen() {
             <TextInput
               style={styles.input}
               value={novoProduto.nome}
-              onChangeText={(text) => setNovoProduto({ ...novoProduto, nome: text })}
+              onChangeText={(text) =>
+                setNovoProduto({ ...novoProduto, nome: text })
+              }
               placeholder="Nome"
             />
             <TextInput
               style={styles.input}
               value={novoProduto.descricao}
-              onChangeText={(text) => setNovoProduto({ ...novoProduto, descricao: text })}
-              placeholder="Descrição"
+              onChangeText={(text) =>
+                setNovoProduto({ ...novoProduto, descricao: text })
+              }
+              placeholder="Descrição (opcional)"
             />
             <TextInput
               style={styles.input}
               value={novoProduto.categoria}
-              onChangeText={(text) => setNovoProduto({ ...novoProduto, categoria: text })}
+              onChangeText={(text) =>
+                setNovoProduto({ ...novoProduto, categoria: text })
+              }
               placeholder="Categoria"
             />
             <TextInput
               style={styles.input}
               value={novoProduto.preco}
-              onChangeText={(text) => setNovoProduto({ ...novoProduto, preco: text })}
+              onChangeText={(text) =>
+                setNovoProduto({ ...novoProduto, preco: text })
+              }
               placeholder="Preço"
               keyboardType="numeric"
             />
@@ -248,7 +266,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     ...Platform.select({
       android: { elevation: 2 },
-      ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+      },
       web: { boxShadow: "0px 4px 6px rgba(0,0,0,0.1)" },
     }),
   },
